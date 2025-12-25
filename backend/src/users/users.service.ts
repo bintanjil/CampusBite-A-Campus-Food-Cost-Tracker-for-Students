@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { User, UserRole } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import { error } from "console";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -52,6 +53,13 @@ export class UsersService {
       catch(error){
         throw  error;
       }
+      
+      // Hash password before saving
+      if (userData.password) {
+        const saltRounds = 10;
+        userData.password = await bcrypt.hash(userData.password, saltRounds);
+      }
+      
       const newUser = this.usersRepository.create(userData);
       newUser.role = UserRole.User;
       return this.usersRepository.save(newUser);
@@ -69,6 +77,13 @@ export class UsersService {
       catch(error){
         throw  error;
       }
+      
+      // Hash password before saving
+      if (userData.password) {
+        const saltRounds = 10;
+        userData.password = await bcrypt.hash(userData.password, saltRounds);
+      }
+      
       const newUser = this.usersRepository.create(userData);
       newUser.role = UserRole.Admin;
       return this.usersRepository.save(newUser);
@@ -101,6 +116,13 @@ export class UsersService {
       catch(error){
         throw  error;
       }
+      
+      // Hash password if it's being updated
+      if (updateData.password) {
+        const saltRounds = 10;
+        updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+      }
+      
       const updatedUser = Object.assign(existUser, updateData);
       return this.usersRepository.save(updatedUser);
     }
