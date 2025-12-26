@@ -22,14 +22,6 @@ export class RestaurantController {
         return this.restaurantService.findAll(filters, false);
     }
 
-    // Admin GET endpoint
-    @Get('admin')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.Admin)
-    async findAllAdmin(@Query() filters : FilterRestaurantDto) {
-        return this.restaurantService.findAll(filters, true);
-    }
-
     @Get('top-rated')
     async getTopRatedRestaurants(@Query('limit') limit : number) {
         return this.restaurantService.getTopRatedRestaurants(limit? limit : 10);
@@ -51,10 +43,10 @@ export class RestaurantController {
         return this.restaurantService.findById(id);
     }
 
-    @Post()
+    @Post('add')
     @UseGuards(JwtAuthGuard)
     async createRestaurant(@Req() req, @Body() createRestaurantDto : CreateRestaurantDto) {
-        const userId = req.user?.id;
+        const userId = req.user.userId;
         return this.restaurantService.create(createRestaurantDto, userId);
     }
 

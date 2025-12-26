@@ -14,19 +14,12 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     // Check if user already exists
-    try {
-      const existingUser = await this.usersService.getUserByEmail(registerDto.email);
-      if (existingUser) {
-        throw new ConflictException('User with this email already exists');
-      }
-    } catch (error) {
-      // If user not found, continue with registration
-      if (error instanceof ConflictException) {
-        throw error;
-      }
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
     }
 
-    // Create new user (password will be hashed in the service)
+    // Create new user with normal user role (password will be hashed in the service)
     const user = await this.usersService.createUser(registerDto);
 
     // Generate JWT token
@@ -40,6 +33,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        university: user.university,
         isVerified: user.isVerified,
       },
     };
@@ -74,17 +68,13 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string): Promise<any> {
-    try {
-      const user = await this.usersService.getUserByEmail(email);
-      
-      if (user && await bcrypt.compare(password, user.password)) {
-        const { password, ...result } = user;
-        return result;
-      }
-      return null;
-    } catch (error) {
-      return null;
+    const user = await this.usersService.findByEmail(email);
+    
+    if (user && await bcrypt.compare(password, user.password)) {
+      const { password, ...result } = user;
+      return result;
     }
+    return null;
   }
 
   async getProfile(userId: string) {

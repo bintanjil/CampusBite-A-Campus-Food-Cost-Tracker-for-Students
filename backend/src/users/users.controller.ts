@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UploadedFile, UseInterceptors, BadRequestException, ParseUUIDPipe } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, UploadedFile, UseInterceptors, BadRequestException, ParseUUIDPipe, UseGuards } from "@nestjs/common";
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -6,6 +6,9 @@ import { UsersService } from "./users.service";
 import { User, UserRole } from "./entities/user.entity";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
+import { RolesGuard } from "src/auth/guards/roles.guard";
 
 @Controller('users')
 export class UsersController {
@@ -35,10 +38,14 @@ export class UsersController {
         return this.usersService.findOne(id);
     }
 
+    @Post("admin/register")
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.Admin)
-    @Post("admin/create")
-    async createAdminUser(@Body() userData: Partial<User>) {
-        return this.usersService.createAdminUser(userData);
+    async createAdminUser(@Body() createUserDto: CreateUserDto) {
+        const user = await this.usersService.createAdminUser(createUserDto);
+        // Don't return password in response
+        const { password, ...result } = user;
+        return result;
     }
 
     @Get("byEmail/:email")

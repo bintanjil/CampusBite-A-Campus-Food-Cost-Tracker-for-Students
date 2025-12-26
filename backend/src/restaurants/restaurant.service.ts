@@ -127,7 +127,7 @@ export class RestaurantService {
     ): Promise<Restaurant> {
         const restaurant = this.restaurantRepository.create({
             ...restaurantData,
-            createdBy: { id: userId },
+            createdById: userId,
             approved: false,
         });
         return this.restaurantRepository.save(restaurant);
